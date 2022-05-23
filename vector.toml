@@ -1,0 +1,41 @@
+# Ingest
+[sources.file]
+type = "file"
+include = ["/usr/local/red5pro/log/red5.log"]
+line_delimiter = "\n"
+read_from = "beginning"
+data_dir = "/usr/local/red5pro/log/"
+
+[sources.file.multiline]
+start_pattern = '^([0-9]{4}(?:-[0-9]{2}){2}(?:[^]\r?\n]+))\s+?'
+condition_pattern = '^([0-9]{4}(?:-[0-9]{2}){2}(?:[^]\r?\n]+))\s+?'
+mode = "halt_before"
+timeout_ms = 1000
+
+#[sinks.tofile]
+#type = "file"
+#inputs = [ "file" ]
+#compression = "none"
+#path = "/Users/allanthatdot.com/Downloads/red5prolog.json"
+
+#[sinks.tofile.encoding]
+#codec = "ndjson"
+
+
+[sinks.to_kafka]
+type = "kafka"
+inputs = [ "file" ]
+bootstrap_servers = "127.0.0.1:9092"
+key_field = "quine"
+topic = "red5prolog"
+encoding = "json"
+compression = "none"
+
+### STDIO
+#[sinks.toconsole]
+#type = "console"
+#inputs = ["file"]
+#target = "stdout"
+
+#[sinks.toconsole.encoding]
+#codec = "json"

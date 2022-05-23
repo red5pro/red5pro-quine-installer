@@ -1,0 +1,170 @@
+version: 1
+title: Red5 Logs
+contributor: engineering@thatdot.com
+summary: ''
+description: ''
+ingestStreams:
+  - type: KafkaIngest
+    topics:
+      - red5prolog
+    bootstrapServers: localhost:9092
+    format:
+      type: CypherJson
+      query: |-
+        WITH *, text.regexFirstMatch($that.message, '^([0-9]{4}(?:-[0-9]{2}){2}(?:[^]\\r?\\n]+))\\s+?\\[(.+?)\\]\\s+?(\\S+?)\\s+(.+?)\\s+\\-\\s+((?:(?!^[0-9]{4}(?:-[0-9]{2}){2}(?:[^|\\r?\\n]+){3}).*(?:\\r?\\n)?)+)') AS r WHERE r IS NOT NULL
+        CREATE (log {
+          timestamp: r[1],
+          component: r[2],
+          level: r[3],
+          subprocess: r[4],
+          message: r[5],
+          type: 'log'
+        })
+        // Create hour/minute buckets per event
+        WITH * WHERE r[1] IS NOT NULL CALL reify.time(datetime({date: localdatetime(r[1], "yyyy-MM-dd HH:mm:ss,SSS")}), ["hour","minute"]) YIELD node AS timeNode
+        // Count events in buckets
+        CALL incrementCounter(timeNode, "count")
+        // Create edges for timenNodes
+        CREATE (log)-[:at]->(timeNode)
+standingQueries:
+  - outputs:
+      component:
+        type: CypherQuery
+        query: >-
+          MATCH (l) WHERE id(l) = $that.data.id
+          MATCH (c) WHERE id(c) = idFrom('component', l.component)
+          MATCH (s) WHERE id(s) = idFrom('subprocess', l.subprocess, l.component)
+          SET c.type = 'component'
+          SET c.name = l.component
+          WITH * CALL create.setLabels(c, [l.component])
+          CREATE (l)-[:subprocess]->(s)
+          SET s.type = 'subprocess'
+          SET s.name = l.subprocess
+          SET s.component = l.component
+          WITH * CALL create.setLabels(s, [l.subprocess])
+          CREATE
+            (l)-[:component]->(c),
+            (s)-[:component]->(c)
+          RETURN null
+          SKIP 1
+    pattern:
+      type: Cypher
+      query: MATCH (l) WHERE l.type = 'log' RETURN DISTINCT id(l) AS id
+      mode: DistinctId
+  - outputs:
+      level:
+        type: CypherQuery
+        query: >-
+          MATCH (l) WHERE id(l) = $that.data.id
+          MATCH (level) WHERE id(level) = idFrom('level', l.level)
+          CREATE (l)-[:log_level]->(level)
+          SET level.type = 'level'
+          SET level.level = l.level
+          WITH * CALL create.setLabels(level, [l.level])
+          RETURN null
+          SKIP 1
+    pattern:
+      type: Cypher
+      query: MATCH (l) WHERE l.type = 'log' RETURN DISTINCT id(l) AS id
+      mode: DistinctId
+nodeAppearances:
+    #Component Icon/color *******************
+  - predicate:
+      propertyKeys:
+        - type
+      knownValues:
+        type: "component"
+    icon: ion-gear-b
+    color: "#32a852"
+    size: 40.00
+    #Subprocess Icon/color *******************
+  - predicate:
+      propertyKeys:
+        - type
+      knownValues:
+        type: "subprocess"
+    icon: ion-gear-b
+    color: "#32a852"
+    size: 20.00
+    #Log Icon/color *******************
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "INFO"
+        type: "log"
+    icon: ion-document
+    color: "#32A852"
+    size: 40.00
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "WARN"
+        type: "log"
+    icon: ion-document
+    color: "#F6B26B"
+    size: 40.00
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "ERROR"
+        type: "log"
+    icon: ion-document
+    color: "#F44336"
+    size: 40.00
+    #Log level Icon/color *******************
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "INFO"
+        type: "level"
+    icon: ion-ios-speedometer-outline
+    color: "#32A852"
+    size: 40.00
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "WARN"
+        type: "level"
+    icon: ion-ios-speedometer-outline
+    color: "#F6B26B"
+    size: 40.00
+  - predicate:
+      propertyKeys:
+        - level
+        - type
+      knownValues:
+        level: "ERROR"
+        type: "level"
+    icon: ion-ios-speedometer-outline
+    color: "#F44336"
+    size: 40.00
+    # Hours and Minutes
+  - predicate:
+      propertyKeys:
+        - period
+      knownValues:
+        period: "hour"
+    icon: ion-clock
+    color: "#32a852"
+    size: 40.00
+  - predicate:
+      propertyKeys:
+        - period
+      knownValues:
+        period: "minute"
+    icon: ion-clock
+    color: "#32a852"
+    size: 20.00
+quickQueries:  [ ]
+sampleQueries: [ ]
+statusQuery:
