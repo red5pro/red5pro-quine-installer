@@ -9,6 +9,10 @@ echo "... updating system ..."
 apt update
 apt upgrade -y
 
+# fix syslog format
+echo "... fixing syslog time format (thanks ubuntu) ..."
+sed -i 's/^\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat/#$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat/g' /etc/rsyslog.conf
+
 # install docker
 echo "... installing docker repo ..."
 if [ ! -f /etc/apt/sources.list.d/docker.list ]; then

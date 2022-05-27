@@ -1,12 +1,12 @@
 version: 1
 title: Red5 Logs
 contributor: engineering@thatdot.com
-summary: ''
-description: ''
+summary: 'Version 2 of the PoC recipe'
+description: 'This version includes quick queries and webhooks'
 ingestStreams:
   - type: KafkaIngest
     topics:
-      - red5prolog
+      - red5prologs
     bootstrapServers: localhost:9092
     format:
       type: CypherJson
@@ -26,6 +26,26 @@ ingestStreams:
         CALL incrementCounter(timeNode, "count")
         // Create edges for timenNodes
         CREATE (log)-[:at]->(timeNode)
+  - type: FileIngest
+    path: $in_file2
+    format:
+      type: CypherLine
+      query: |-
+        WITH text.regexFirstMatch($that, '^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d*?\\+\\d{2}:\\d{2}|Z).?\\s(.*?)(?=\\s).?\\s(\\S+)\\[(\\S+)\\]:\\s(.*)') AS s WHERE s IS NOT NULL
+        CREATE (syslog {
+          timestamp: s[1],
+          hostname: s[2],
+          app_name: s[3],
+          proc_id: s[4],
+          message: s[5],
+          type: 'syslog'
+        })
+        // Create hour/minute buckets per event
+        WITH * WHERE s[1] IS NOT NULL CALL reify.time(datetime({date: localdatetime(s[1], "yyyy-MM-dd'T'HH:mm:ss.SSSSSSz")}), ["hour","minute"]) YIELD node AS timeNode
+        // Count events in buckets
+        //CALL incrementCounter(timeNode, "count")
+        // Create edges for timenNodes
+        CREATE (syslog)-[:at]->(timeNode)
 standingQueries:
   - outputs:
       component:
@@ -60,13 +80,14 @@ standingQueries:
           CREATE (l)-[:log_level]->(level)
           SET level.type = 'level'
           SET level.level = l.level
-          WITH * CALL create.setLabels(level, [l.level])
+          WITH * CALL create.setLabels(level, [l.level]) 
           RETURN null
           SKIP 1
     pattern:
       type: Cypher
-      query: MATCH (l) WHERE l.type = 'log' RETURN DISTINCT id(l) AS id
+      query: MATCH (n) WHERE n.type = 'log' RETURN DISTINCT id(n) AS id
       mode: DistinctId
+
 nodeAppearances:
     #Component Icon/color *******************
   - predicate:
@@ -165,6 +186,41 @@ nodeAppearances:
     icon: ion-clock
     color: "#32a852"
     size: 20.00
-quickQueries:  [ ]
+quickQueries:
+  - predicate:
+      propertyKeys: [ ]
+      knownValues: {}
+    quickQuery:
+      name: Adjacent Nodes
+      querySuffix: MATCH (n)--(m) RETURN DISTINCT m
+      queryLanguage: Cypher
+      sort: Node
+  - predicate:
+      propertyKeys: []
+      knownValues: {}
+    quickQuery:
+      name: Refresh
+      querySuffix: RETURN n
+      queryLanguage: Cypher
+      sort: Node
+  - predicate:
+      propertyKeys: []
+      knownValues: {}
+    quickQuery:
+      name: Local Properties
+      querySuffix: RETURN id(n), properties(n)
+      queryLanguage: Cypher
+      sort: Text
+  - predicate:
+      propertyKeys: [ ]
+      knownValues: {
+        "type": "log"
+      }
+    quickQuery:
+      name: Log Details
+      querySuffix: RETURN n.message
+      queryLanguage: Cypher
+      sort: Text
 sampleQueries: [ ]
 statusQuery:
+  cypherQuery: MATCH (n) RETURN count(n)
