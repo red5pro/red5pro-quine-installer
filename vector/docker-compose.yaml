@@ -1,0 +1,13 @@
+---
+version: '3'
+services:
+  quine:
+    image: timberio/vector:0.21.2-distroless-libc
+    command: ["vector", "--config /vector.toml"]
+    container_name: vector
+    entrypoint: []
+    restart: always
+    volumes:
+      - ./vector.toml:/vector.toml
+      - /var/log:/var/log
+      - /usr/local/red5pro/log:/usr/local/red5pro/log
