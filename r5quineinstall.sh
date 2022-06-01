@@ -31,6 +31,13 @@ if [ ! -f /usr/bin/docker ]; then
 else
   echo "... docker already installed ..."
 fi
+echo "... installing docker-compose ..."
+if [ ! -f /usr/bin/docker-compose ]; then
+  apt update
+  apt install -y docker-compose
+else
+  echo "... docker-compose already installed ..."
+fi
 
 # install kafka docker
 echo "... installing kafka ..."
