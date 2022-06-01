@@ -59,8 +59,9 @@ fi
 echo "... installing vector ..."
 docker images | grep vector
 if [ $? -ne 0 ]; then
-  docker pull timberio/vector:0.21.2-distroless-libc
-  alias vector='docker run -it --rm timberio/vector:0.21.2'
+  cd vector
+  docker-compose -f ./docker-compose.yaml up -d
+  cd ..
 else
   echo "... vector already installed ..."
 fi
