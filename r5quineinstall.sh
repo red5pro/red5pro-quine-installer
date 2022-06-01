@@ -43,12 +43,14 @@ fi
 echo "... installing kafka ..."
 docker images | grep kafka
 if [ $? -ne 0 ]; then
-  docker-compose -f ./kafka-compose.yaml up -d
+  cd kafka
+  docker-compose -f ./docker-compose.yaml up -d
   echo "... configuring kafka topic ..."
   docker exec broker \
     kafka-topics --bootstrap-server broker:9092 \
     --create \
     --topic red5prologs
+  cd ..
 else
   echo "... kafka already installed ..."
 fi
@@ -67,8 +69,9 @@ fi
 echo "... installing quine ..."
 docker images | grep quine
 if [ $? -ne 0 ]; then
-  docker pull thatdot/quine
-  docker compose -f ./quine-compose.yaml up -d
+  cd quine
+  docker compose -f ./docker-compose.yaml up -d
+  cd ..
 else
   echo "... quine already installed ..."
 fi
