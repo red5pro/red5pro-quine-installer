@@ -43,7 +43,7 @@ fi
 echo "... installing kafka ..."
 docker images | grep kafka
 if [ $? -ne 0 ]; then
-  docker-compose -f .\kafka-compose.yaml up
+  docker-compose -f ./kafka-compose.yaml up
   echo "... configuring kafka topic ..."
   docker exec broker \
     kafka-topics --bootstrap-server broker:9092 \
