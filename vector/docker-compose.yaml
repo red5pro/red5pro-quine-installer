@@ -3,9 +3,9 @@ version: '3'
 services:
   quine:
     image: timberio/vector:0.21.2-distroless-libc
-    command: ["vector", "--config /vector.toml"]
     container_name: vector
-    entrypoint: []
+    environment:
+      -  VECTOR_CONFIG_TOML=/vector.toml
     restart: always
     volumes:
       - ./vector.toml:/vector.toml
