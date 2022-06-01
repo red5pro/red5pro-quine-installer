@@ -5,8 +5,9 @@ services:
     image: thatdot/quine:latest
     command: ["java","-XX:+AlwaysPreTouch","-XX:+UseParallelGC","-XX:InitialRAMPercentage=10.0","-XX:MaxRAMPercentage=20.0","-Dconfig.file=/quine-config.yaml","-jar","/quine-1.2.1.jar"]
     container_name: quine
+    entrypoint: []
     ports:
       - "8080:8080"
     restart: always
     volumes:
-    - ./quine_config.yaml:/quine_config.yaml
+      - ./quine-config.yaml:/quine-config.yaml
