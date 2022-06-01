@@ -7,7 +7,7 @@ ingestStreams:
   - type: KafkaIngest
     topics:
       - red5prologs
-    bootstrapServers: localhost:9092
+    bootstrapServers: 172.17.0.1:9092
     format:
       type: CypherJson
       query: |-

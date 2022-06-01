@@ -25,7 +25,7 @@ timeout_ms = 1000
 [sinks.to_kafka]
 type = "kafka"
 inputs = [ "file" ]
-bootstrap_servers = "127.0.0.1:9092"
+bootstrap_servers = "172.17.0.1:9092"
 key_field = "quine"
 topic = "red5prolog"
 encoding = "json"
