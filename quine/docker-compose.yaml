@@ -3,7 +3,7 @@ version: '3'
 services:
   quine:
     image: thatdot/quine:latest
-    command: ["java","-XX:+AlwaysPreTouch","-XX:+UseParallelGC","-XX:InitialRAMPercentage=10.0","-XX:MaxRAMPercentage=20.0","-Dconfig.file=/quine-config.yaml","-jar","/quine-1.2.1.jar"]
+    command: ["java","-XX:+AlwaysPreTouch","-XX:+UseParallelGC","-XX:InitialRAMPercentage=10.0","-XX:MaxRAMPercentage=20.0","-jar","/quine-1.2.1.jar","-recipe-value","in_file=/quine-config.yaml"]
     container_name: quine
     entrypoint: []
     ports:
